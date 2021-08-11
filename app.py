@@ -112,8 +112,29 @@ def sheet(session_state):
 
     st.sidebar.markdown(f'# [Go to Google Sheet]({st.secrets["private_gsheets_url"]})')
 
+def authentication():
+    # Simple password authentication.
+    session_state = get(password='')
+
+    if session_state.password != st.secrets["password"]:
+        pwd_placeholder = st.sidebar.empty()
+        pwd = pwd_placeholder.text_input(
+            "Password:", value="", type="password")
+        session_state.password = pwd
+        if session_state.password == st.secrets["password"]:
+            pwd_placeholder.empty()
+            st.success('Logged in')
+            main()
+        elif session_state.password != '':
+            st.error("Incorrect password")
+        else:
+            st.info("Please enter the password")
+
+    else:
+        main()
 
 if __name__ == '__main__':
     st.set_page_config(layout="wide")
 
-    main()
+    authentication()
+    # main()
