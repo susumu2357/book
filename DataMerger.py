@@ -88,4 +88,6 @@ class DataMerger():
 
     def get_master(self):
         master_df = self.spread.sheet_to_df(header_rows=1, index=None)
+        master_df = self.cast(master_df)
+        master_df[self.columns[0]] = pd.to_datetime(master_df[self.columns[0]], format='%Y-%m-%d')
         return master_df
