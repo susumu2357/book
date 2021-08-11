@@ -63,11 +63,20 @@ def dashboard(session_state):
     col1, col2 = st.columns(2)
 
     with col1:
-        date_range = st.slider(
-            label='Select the range of transaction date',
+        date_upper = df['Transaction date'].max().date()
+        
+        date_lower = st.date_input(
+            label='Select the lower limit of transaction date',
             min_value=df['Transaction date'].min().date(),
+            max_value=date_upper,
+            value=df['Transaction date'].min().date(),
+        )
+
+        date_upper = st.date_input(
+            label='Select the upper limit of transaction date',
+            min_value=date_lower,
             max_value=df['Transaction date'].max().date(),
-            value=(df['Transaction date'].min().date(), df['Transaction date'].max().date()),
+            value=df['Transaction date'].max().date(),
         )
 
         accounts = st.multiselect(
@@ -82,7 +91,7 @@ def dashboard(session_state):
             default=df['User'].unique(),
         )
 
-        filt_date = (df['Transaction date'].dt.date >= date_range[0]) & (df['Transaction date'].dt.date <= date_range[1]) 
+        filt_date = (df['Transaction date'].dt.date >= date_lower) & (df['Transaction date'].dt.date <= date_upper) 
         filt_account = [True if x in accounts else False for x in df['Account']]
         filt_user = [True if x in users else False for x in df['User']]
 
@@ -94,7 +103,7 @@ def dashboard(session_state):
         fig_pie = px.pie(expense_df, values='Expense', names='Description', title='Breakdown of expense')
         st.plotly_chart(fig_pie, use_container_width=True)
 
-        fig_line = px.bar(expense_df.set_index('Transaction date').resample('1m').sum().reset_index(), x='Transaction date', y='Expense')
+        fig_line = px.bar(df[filt_date & filt_account & filt_user].set_index('Transaction date').resample('1m').sum().reset_index(), x='Transaction date', y='Amount')
         st.plotly_chart(fig_line, use_container_width=True)
 
 
