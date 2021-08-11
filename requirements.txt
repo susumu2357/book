@@ -1,0 +1,7 @@
+streamlit
+pandas
+xlsxwriter
+openpyxl
+plotly
+google-auth
+gspread_pandas
