@@ -83,6 +83,8 @@ class DataMerger():
             self.skandia(path, name)
         elif account == 'sony':
             self.sony(path, name)
+        elif account == 'swedbank':
+            self.swedbank(path, name)
         else:
             raise ValueError()
 

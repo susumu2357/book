@@ -33,7 +33,7 @@ def new_table(session_state):
     with col1:
         account = st.selectbox(
             'Choose bank',
-            ('prestia', 'skandia', 'sony'))
+            ('prestia', 'sony', 'skandia', 'swedbank', 'nordea'))
 
         user = st.selectbox(
             'Choose user name',
