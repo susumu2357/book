@@ -5,3 +5,5 @@ openpyxl
 plotly
 google-auth
 gspread_pandas
+sklearn
+lightgbm
