@@ -66,14 +66,14 @@ def dashboard(session_state):
         date_upper = df['Transaction date'].max().date()
         
         date_lower = st.date_input(
-            label='Select the lower limit of transaction date',
+            label='Select the lower limit of the transaction date',
             min_value=df['Transaction date'].min().date(),
             max_value=date_upper,
             value=df['Transaction date'].min().date(),
         )
 
         date_upper = st.date_input(
-            label='Select the upper limit of transaction date',
+            label='Select the upper limit of the transaction date',
             min_value=date_lower,
             max_value=df['Transaction date'].max().date(),
             value=df['Transaction date'].max().date(),
@@ -93,22 +93,26 @@ def dashboard(session_state):
 
         categories = st.multiselect(
             label='Select the category',
-            options=df['Category'].unique(),
-            default=df['Category'].unique(),
+            options=df[df['Category'] != '']['Category'].unique(),
+            default=df[df['Category'] != '']['Category'].unique(),
         )
 
         filt_date = (df['Transaction date'].dt.date >= date_lower) & (df['Transaction date'].dt.date <= date_upper) 
         filt_account = [True if x in accounts else False for x in df['Account']]
         filt_user = [True if x in users else False for x in df['User']]
-        filt_category = [True if x in users else False for x in df['Category']]
+        filt_category = [True if x in categories else False for x in df['Category']]
 
         st.dataframe(df[filt_date & filt_account & filt_user & filt_category])
 
     with col2:
         expense_df = df[filt_date & filt_account & filt_user & filt_category].dropna(subset=['Expense'])
+        income_df = df[filt_date & filt_account & filt_user & filt_category].dropna(subset=['Income'])
 
-        fig_pie = px.pie(expense_df, values='Expense', names='Category', title='Breakdown of expense')
-        st.plotly_chart(fig_pie, use_container_width=True)
+        expense_pie = px.pie(expense_df, values='Expense', names='Category', title='Breakdown of expense')
+        st.plotly_chart(expense_pie, use_container_width=True)
+
+        income_pie = px.pie(income_df, values='Income', names='Category', title='Breakdown of income')
+        st.plotly_chart(income_pie, use_container_width=True)
 
         fig_line = px.bar(df[filt_date & filt_account & filt_user & filt_category].set_index('Transaction date').resample('1m').sum().reset_index(), x='Transaction date', y='Amount')
         st.plotly_chart(fig_line, use_container_width=True)
