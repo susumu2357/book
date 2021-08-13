@@ -91,19 +91,26 @@ def dashboard(session_state):
             default=df['User'].unique(),
         )
 
+        categories = st.multiselect(
+            label='Select the category',
+            options=df['Category'].unique(),
+            default=df['Category'].unique(),
+        )
+
         filt_date = (df['Transaction date'].dt.date >= date_lower) & (df['Transaction date'].dt.date <= date_upper) 
         filt_account = [True if x in accounts else False for x in df['Account']]
         filt_user = [True if x in users else False for x in df['User']]
+        filt_category = [True if x in users else False for x in df['Category']]
 
-        st.dataframe(df[filt_date & filt_account & filt_user])
+        st.dataframe(df[filt_date & filt_account & filt_user & filt_category])
 
     with col2:
-        expense_df = df[filt_date & filt_account & filt_user].dropna(subset=['Expense'])
+        expense_df = df[filt_date & filt_account & filt_user & filt_category].dropna(subset=['Expense'])
 
-        fig_pie = px.pie(expense_df, values='Expense', names='Description', title='Breakdown of expense')
+        fig_pie = px.pie(expense_df, values='Expense', names='Category', title='Breakdown of expense')
         st.plotly_chart(fig_pie, use_container_width=True)
 
-        fig_line = px.bar(df[filt_date & filt_account & filt_user].set_index('Transaction date').resample('1m').sum().reset_index(), x='Transaction date', y='Amount')
+        fig_line = px.bar(df[filt_date & filt_account & filt_user & filt_category].set_index('Transaction date').resample('1m').sum().reset_index(), x='Transaction date', y='Amount')
         st.plotly_chart(fig_line, use_container_width=True)
 
 
