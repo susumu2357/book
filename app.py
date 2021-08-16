@@ -63,19 +63,27 @@ def dashboard(session_state):
     df = load_df()
     st.markdown('# Monthly view')
 
-    month = st.selectbox(
+    monthly_columns = st.columns(2)
+
+    month = monthly_columns[0].selectbox(
         label='Month',
         options=df['Transaction date'].dt.strftime('%Y-%m').unique()[::-1],
         )
     filt_month = (df['Transaction date'].dt.strftime('%Y-%m') == month)
-    
-    filt_transfer = df['Category'] != 'transfer'
-    filtered_df = df[filt_month & filt_transfer]
-    expense_df = filtered_df.dropna(subset=['Expense'])
-    income_df = filtered_df.dropna(subset=['Income'])
 
-    # accounts = filtered_df['Account'].unique()
-    # users = filtered_df['User'].unique()
+    monthly_user = monthly_columns[1].multiselect(
+        label='Income from specific user',
+        options=df[filt_month]['User'].unique(),
+        default=df[filt_month]['User'].unique(),
+        )
+    
+    filt_month_transfer = df['Category'] != 'transfer'
+    filtered_df = df[filt_month & filt_month_transfer]
+    filt_month_user = np.array([True if x in monthly_user else False for x in filtered_df['User']])
+    expense_df = filtered_df.dropna(subset=['Expense'])
+    income_df = filtered_df[filt_month_user].dropna(subset=['Income'])
+    filtered_df = pd.concat([expense_df, income_df])
+
     categories = filtered_df['Category'].unique()
 
     chart_columns = st.columns([1,1,2])
@@ -112,40 +120,36 @@ def dashboard(session_state):
     chart_columns[1].plotly_chart(income_pie, use_container_width=True)
     chart_columns[2].plotly_chart(waterfall, use_container_width=True)
 
-    st.dataframe(filtered_df)
 
-    # transfer_bar = go.Figure(
-    #     go.Bar(x=[month], y=[transfer_df['Income'].sum()],
-    #     name='in'))
-    # transfer_bar.add_trace(
-    #     go.Bar(x=[month], y=[-1*transfer_df['Expense'].sum()],
-    #     name='out'))
-    # transfer_bar.update_layout(barmode='relative', title_text=f'Overview of ransfer in {month}')
+    for cat in filtered_df['Category'].unique():
+        st.markdown(f'### Category: {cat}')
+        st.dataframe(filtered_df[filtered_df['Category'] == cat].iloc[:, :-3])
 
     st.markdown('----')
     st.markdown('# History view')
     
     input_columns = st.columns(3)
-    # history_columns = st.columns([1, 5])
 
-    accounts = input_columns[0].multiselect(
+    radio_transfer = input_columns[0].radio(
+        'Include or exclude "transfer"',
+        ('Exclude', 'Include'),
+    )
+    
+    accounts = input_columns[1].multiselect(
         label='Bank account',
         options=df['Account'].unique(),
         default=df['Account'].unique(),
         )
     filt_account = np.array([True if x in accounts else False for x in df['Account']])
 
-    users = input_columns[1].multiselect(
+    users = input_columns[2].multiselect(
         label='User',
         options=df['User'].unique(),
         default=df['User'].unique(),
         )
     filt_user = np.array([True if x in users else False for x in df['User']])
 
-    radio_transfer = input_columns[2].radio(
-        'Include or exclude "transfer"',
-        ('Include', 'Exclude'),
-    )
+
     if radio_transfer == 'Include':
         history_df = df[filt_account & filt_user].set_index('Transaction date').groupby('Category').resample('1m').sum().reset_index()
     else:
@@ -163,23 +167,9 @@ def dashboard(session_state):
     history_bar.add_trace(
         go.Scatter(x=total_df['Transaction date'], y=total_df['Amount'], mode='lines+markers', name='Total'))
 
+    history_bar.update_xaxes(nticks=len(total_df['Transaction date'])+1)
     st.plotly_chart(history_bar, use_container_width=True)
-
-    # with col2:
-    #     expense_df = df[filt_date & filt_account & filt_user & filt_category].dropna(subset=['Expense'])
-    #     income_df = df[filt_date & filt_account & filt_user & filt_category].dropna(subset=['Income'])
-
-    #     expense_pie = px.pie(expense_df, values='Expense', names='Category', title='Breakdown of expense')
-    #     st.plotly_chart(expense_pie, use_container_width=True)
-
-    #     income_pie = px.pie(income_df, values='Income', names='Category', title='Breakdown of income')
-    #     st.plotly_chart(income_pie, use_container_width=True)
-
-    #     fig_line = px.bar(
-    #         df[filt_date & filt_account & filt_user & filt_category].set_index('Transaction date').resample('1m').sum().reset_index(),
-    #         x='Transaction date', y='Amount', color='Category')
-    #     st.plotly_chart(fig_line, use_container_width=True)
-
+    
 
 def sheet(session_state):
     # The link to the sheet.
