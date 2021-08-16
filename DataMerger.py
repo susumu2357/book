@@ -46,7 +46,7 @@ class DataMerger():
         merged_df = pd.concat([master_df, tmp_df], ignore_index=True)
         merged_df = merged_df.drop_duplicates(subset=self.columns[:6])
         merged_df = merged_df.sort_values(by=self.columns[0])
-        self.spread.df_to_sheet(merged_df, index=False)
+        self.spread.df_to_sheet(merged_df, index=False, sheet='book')
         
     def swedbank(self, path, name):
         tmp_df = pd.read_excel(path, header=7)
