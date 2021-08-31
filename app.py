@@ -49,7 +49,7 @@ def new_table(session_state):
         df = dm.get_master()
         col2.dataframe(df)
 
-@st.cache
+# @st.cache
 def load_df():
     dm = DataMerger()
     df = dm.get_master()
@@ -128,21 +128,30 @@ def dashboard(session_state):
     st.markdown('----')
     st.markdown('# History view')
     
-    input_columns = st.columns(3)
+    input_columns = st.columns(4)
 
     radio_transfer = input_columns[0].radio(
         'Include or exclude "transfer"',
         ('Exclude', 'Include'),
     )
     
-    accounts = input_columns[1].multiselect(
+    radio_moving = input_columns[1].radio(
+        'Include only after moving to Sweden',
+        ('After moving', 'All'),
+    )
+    if radio_moving == 'After moving':
+        filt_time = (df['Transaction date'] >= '2020-08-01')
+    else:
+        filt_time = (df['Transaction date'] >= df['Transaction date'].min())
+
+    accounts = input_columns[2].multiselect(
         label='Bank account',
         options=df['Account'].unique(),
         default=df['Account'].unique(),
         )
     filt_account = np.array([True if x in accounts else False for x in df['Account']])
 
-    users = input_columns[2].multiselect(
+    users = input_columns[3].multiselect(
         label='User',
         options=df['User'].unique(),
         default=df['User'].unique(),
@@ -151,10 +160,10 @@ def dashboard(session_state):
 
 
     if radio_transfer == 'Include':
-        history_df = df[filt_account & filt_user].set_index('Transaction date').groupby('Category').resample('1m').sum().reset_index()
+        history_df = df[filt_time & filt_account & filt_user].set_index('Transaction date').groupby('Category').resample('1m').sum().reset_index()
     else:
         filt_transfer = df['Category'] != 'transfer'
-        history_df = df[filt_account & filt_user & filt_transfer].set_index('Transaction date').groupby('Category').resample('1m').sum().reset_index()
+        history_df = df[filt_time & filt_account & filt_user & filt_transfer].set_index('Transaction date').groupby('Category').resample('1m').sum().reset_index()
 
     history_df['Transaction date'] = history_df['Transaction date'].dt.strftime('%Y-%m')
     history_bar = px.bar(
