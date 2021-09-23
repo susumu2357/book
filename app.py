@@ -20,7 +20,6 @@ def main():
         'Table Uploader': new_table,
         'Account Book Dashboard': dashboard,
         'Link to Google Sheet': sheet,
-        'Re-train model': train,
     }
     page = st.sidebar.selectbox(
         'Select page:', options=list(PAGES.keys()))
