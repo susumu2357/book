@@ -1,7 +1,6 @@
 '''Account book dashboard.
 '''
 
-import os
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -200,14 +199,6 @@ def sheet(session_state):
 
     st.sidebar.markdown(
         f'# [Go to Google Sheet]({st.secrets["private_gsheets_url"]})')
-
-
-def train(session_state):
-    # Re-train the model.
-
-    if st.sidebar.button('Train'):
-        dm = DataMerger()
-        dm.train()
 
 
 def authentication():
